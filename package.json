@@ -1,6 +1,6 @@
 {
   "name": "pandao-suppliers",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "设置价格、质量、交期和服务权重，比较供应商评分。",
   "license": "MIT",
