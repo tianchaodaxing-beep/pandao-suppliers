@@ -1,0 +1,15 @@
+const test=require('node:test');const assert=require('node:assert/strict');const P=require('../planning.js');
+const weights={price:25,quality:35,delivery:25,service:15};const row={supplier:'甲',price:80,quality:90,delivery:75,service:85};
+test("四项评分加权核对",()=>{assert.equal(P.suppliers([row],weights).details[0].score,83);});
+test("并列排名与下一名跳号",()=>{const r=P.suppliers([row,{...row,supplier:'乙'},{...row,supplier:'丙',price:0}],weights);assert.deepEqual(r.details.map(x=>x.rank),[1,1,3]);assert.equal(r.best.length,2);});
+test("改变权重影响排序",()=>{const r=P.suppliers([row,{...row,supplier:'乙',price:100,quality:0}],{price:100,quality:0,delivery:0,service:0});assert.equal(r.best[0],'乙');});
+test("零分供应商可比较",()=>{assert.equal(P.suppliers([{...row,price:0,quality:0,delivery:0,service:0}],weights).average,0);});
+test("百分之百分数不溢出",()=>{assert.equal(P.suppliers([{...row,price:100,quality:100,delivery:100,service:100}],weights).details[0].score,100);});
+test("权重不足百分之百被拒绝",()=>{assert.throws(()=>P.suppliers([row],{...weights,price:20}),/100%/);});
+test("负权重被拒绝",()=>{assert.throws(()=>P.suppliers([row],{...weights,price:-1}));});
+test("评分超过100被拒绝",()=>{assert.throws(()=>P.suppliers([{...row,quality:101}],weights));});
+test("非十进制评分被拒绝",()=>{assert.throws(()=>P.suppliers([{...row,quality:'0x64'}],weights),/有效数字/);});
+test("缺失评分不能当零分",()=>{assert.throws(()=>P.suppliers([{...row,quality:''}],weights),/请填写/);});
+test("重复供应商被拒绝",()=>{assert.throws(()=>P.suppliers([row,row],weights),/重复/);});
+test("未填写名称被拒绝",()=>{assert.throws(()=>P.suppliers([{...row,supplier:' '}],weights),/名称/);});
+test("没有修改原始输入",()=>{const copy=JSON.stringify(row);P.suppliers([row],weights);assert.equal(JSON.stringify(row),copy);});
